@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/koljan1337/second_try/main/models"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"os"
+	_ "os"
 	"strconv"
 )
 
@@ -20,23 +19,18 @@ type response struct {
 }
 
 func connect() *sql.DB {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	connStr := "user=postgres dbname=db123 password=1234 host=localhost sslmode=diable"
-	db, err := sql.Open("postgers", os.Getenv(connStr))
+	connStr := "user=postgres dbname=database password=1234 host=localhost sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
+	//defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Connected!")
+	fmt.Printf("\nSuccessfully connected to database!\n")
 	return db
 }
 
@@ -150,7 +144,7 @@ func insertPerson(person models.Person) int {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO person (FirstName, LastName, Email, BirthDate, Address, Gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 
 	var id int
 	err := db.QueryRow(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender).Scan(&id)
@@ -171,9 +165,9 @@ func getPerson(id int) (models.Person, error) {
 
 	var person models.Person
 
-	sqlStatement := `SELECT * FROM person WHERE id=$7`
+	sqlStatement := `SELECT * FROM person WHERE id=$1`
 	row := db.QueryRow(sqlStatement, id)
-	err := row.Scan(&person.ID, &person.FirstName, &person.LastName, &person.Email, &person.BirthDate, &person.Address, &person.Gender)
+	err := row.Scan(&person.FirstName, &person.LastName, &person.Email, &person.BirthDate, &person.Address, &person.Gender, &person.ID)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -207,7 +201,7 @@ func getAllPersons() ([]models.Person, error) {
 
 	for rows.Next() {
 		var person models.Person
-		err = rows.Scan(&person.ID, &person.FirstName, &person.LastName, &person.Email, &person.BirthDate, &person.Address, &person.Gender)
+		err = rows.Scan(&person.FirstName, &person.LastName, &person.Email, &person.BirthDate, &person.Address, &person.Gender, &person.ID)
 		if err != nil {
 			log.Fatalf("Unable to scan the row. %v", err)
 		}
@@ -222,9 +216,9 @@ func updatePerson(id int, person models.Person) int {
 
 	defer db.Close()
 
-	sqlStatement := `UPDATE person SET FirstName=$1, LastName=$2, Email=$3, BirthDate=$4, Address=$5, Gender=$6 WHERE id=&7`
+	sqlStatement := `UPDATE person SET first_name=$1, last_name=$2, email=$3, birth_date=$4, address=$5, gender=$6 WHERE id=$7`
 
-	res, err := db.Exec(sqlStatement, id, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender)
+	res, err := db.Exec(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender, id)
 	if err != nil {
 		log.Fatalf("Unable to execute the query. %v", err)
 	}
@@ -245,7 +239,7 @@ func deletePerson(id int) int {
 
 	defer db.Close()
 
-	sqlStatement := `DELETE FROM person WHERE id=$7`
+	sqlStatement := `DELETE FROM person WHERE id=$1`
 	res, err := db.Exec(sqlStatement, id)
 	if err != nil {
 		log.Fatalf("Unable to execute the querry. %v", err)

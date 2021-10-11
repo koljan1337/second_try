@@ -1,0 +1,8 @@
+PUT http://localhost:8080/api/persons/2
+Content-Type: application/x-www-form-urlencoded
+
+{
+"first_name" : "loh", "last_name" : "pidor", "email" : "an@mail.com", "birth_date" : "2000-01-02T15:04:05Z07:00", "gender" : "gay", "address" : "address"
+}
+
+###
