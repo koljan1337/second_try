@@ -14,8 +14,8 @@ import (
 )
 
 type response struct {
-	ID      string `json:"id,omitempty"`
-	Message string `json:"message,omitempty"`
+	Message string        `json:"message,omitempty"`
+	Person  models.Person `json:"person"`
 }
 
 func connect() *sql.DB {
@@ -48,9 +48,11 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	insertID := insertPerson(person)
+	person.ID = insertID
+
 	res := response{
-		ID:      string(rune(insertID)),
-		Message: "User created successfully",
+		Message: "Person created successfully",
+		Person:  person,
 	}
 	json.NewEncoder(w).Encode(res)
 }
@@ -107,10 +109,10 @@ func UpdatePerson(w http.ResponseWriter, r *http.Request) {
 
 	updatedRows := updatePerson(int(id), person)
 	msg := fmt.Sprintf("Person updates successfully. Total affected fields : %v", updatedRows)
-
+	person.ID = id
 	res := response{
-		ID:      string(rune(int(id))),
 		Message: msg,
+		Person:  person,
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -131,8 +133,8 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("User deleted successfully. %v", deletedRows)
 
 	res := response{
-		ID:      string(rune(int(id))),
 		Message: msg,
+		//Person: ,
 	}
 
 	json.NewEncoder(w).Encode(res)

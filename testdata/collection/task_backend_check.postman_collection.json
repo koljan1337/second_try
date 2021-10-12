@@ -1,0 +1,129 @@
+{
+	"info": {
+		"_postman_id": "26210217-7341-47e3-aed6-d42543d2c88f",
+		"name": "task_backend_check",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Endpoints",
+			"item": [
+				{
+					"name": "Create Person",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Name\",\n    \"last_name\": \"Surname\",\n    \"email\": \"animal@mail.com\",\n    \"birth_date\": \"2000-01-02T15:04:05Z07:00\",\n    \"gender\": \"Male\",\n    \"address\": \"Address 1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/persons",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"persons"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all persons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{server_url}}/persons",
+							"host": [
+								"{{server_url}}"
+							],
+							"path": [
+								"persons"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get person",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{server_url}}/persons/5",
+							"host": [
+								"{{server_url}}"
+							],
+							"path": [
+								"persons",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Person",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Name\",\n    \"last_name\": \"Surname\",\n    \"email\": \"animal@mail.com\",\n    \"birth_date\": \"2000-01-02T15:04:05Z07:00\",\n    \"gender\": \"Male\",\n    \"address\": \"Address 1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{server_url}}/persons/5",
+							"host": [
+								"{{server_url}}"
+							],
+							"path": [
+								"persons",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Person",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{server_url}}/persons/10",
+							"host": [
+								"{{server_url}}"
+							],
+							"path": [
+								"persons",
+								"10"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

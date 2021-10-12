@@ -2,7 +2,12 @@ POST http://localhost:8080/api/persons
 Content-Type: application/x-www-form-urlencoded
 
 {
-"first_name" : "loh", "last_name" : "lol", "email" : "an@mail.com", "birth_date" : "2000-01-02T15:04:05Z07:00", "gender" : "male", "address" : "address"
+    "first_name": "Name",
+    "last_name": "Surname",
+    "email": "an@mail.com",
+    "birth_date": "2000-01-02T15:04:05Z07:00",
+    "gender": "Male",
+    "address": "Address 1"
 }
 
 ###
