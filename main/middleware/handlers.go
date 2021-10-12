@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"github.com/koljan1337/second_try/main/models"
 	_ "github.com/lib/pq"
@@ -14,8 +15,9 @@ import (
 )
 
 type response struct {
-	Message string        `json:"message,omitempty"`
-	Person  models.Person `json:"person"`
+	Message string         `json:"message,omitempty"`
+	Person  *models.Person `json:"person,omitempty"`
+	Msg     string         `json:"msg,omitempty"`
 }
 
 func connect() *sql.DB {
@@ -42,18 +44,32 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 
 	var person models.Person
 
+	//var loh []validator.FieldError
+
 	err := json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
 		log.Fatalf("Unable to decode request body. %v", err)
 	}
 
-	insertID := insertPerson(person)
-	person.ID = insertID
+	v := validator.New()
+	validationErr := v.Struct(person)
 
-	res := response{
-		Message: "Person created successfully",
-		Person:  person,
+	var res response
+	if validationErr != nil {
+		res.Message = validationErr.Error()
+
 	}
+
+	if res.Message == "" {
+		insertID := insertPerson(person)
+		person.ID = insertID
+
+		res = response{
+			Person: &person,
+		}
+	}
+
+	fmt.Println(res)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -111,8 +127,9 @@ func UpdatePerson(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("Person updates successfully. Total affected fields : %v", updatedRows)
 	person.ID = id
 	res := response{
-		Message: msg,
-		Person:  person,
+		Message: "",
+		Person:  &person,
+		Msg:     msg,
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -133,7 +150,8 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("User deleted successfully. %v", deletedRows)
 
 	res := response{
-		Message: msg,
+		Message: "",
+		Msg:     msg,
 		//Person: ,
 	}
 
@@ -146,17 +164,30 @@ func insertPerson(person models.Person) int {
 
 	defer db.Close()
 
-	sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-
+	//if person.Gender != "Male" || person.Gender != "Female" {
+	//	log.Fatal("Gender out of range.")
+	//	db.Close()
+	//}
 	var id int
+
+	sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 	err := db.QueryRow(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender).Scan(&id)
-
 	if err != nil {
-		log.Fatalf("Unable to execute the querry. %v", err)
+		log.Fatalf("Unable to execute the query. %v", err)
 	}
-
 	fmt.Printf("Inserted a single record %v", id)
+
 	return id
+	//sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+
+	//var id int
+
+	//err := person.bebra
+	//if err != nil {
+	//	return 0, err
+	//}
+
+	//err = db.QueryRow(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender).Scan(&id)
 }
 
 //Get person by ID
@@ -174,7 +205,7 @@ func getPerson(id int) (models.Person, error) {
 	switch err {
 	case sql.ErrNoRows:
 		fmt.Println("No persons found")
-		return person, nil
+		return person, err
 	case nil:
 		return person, nil
 	default:
@@ -218,9 +249,15 @@ func updatePerson(id int, person models.Person) int {
 
 	defer db.Close()
 
+	//if person.Gender != "Male" || person.Gender != "Female" {
+	//	log.Fatal("Gender is out of range.")
+	//	db.Close()
+	//}
+
 	sqlStatement := `UPDATE person SET first_name=$1, last_name=$2, email=$3, birth_date=$4, address=$5, gender=$6 WHERE id=$7`
 
 	res, err := db.Exec(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender, id)
+
 	if err != nil {
 		log.Fatalf("Unable to execute the query. %v", err)
 	}
