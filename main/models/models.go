@@ -10,7 +10,7 @@ type Person struct {
 	Email     string `json:"email" validate:"required,email,max=200"`
 	BirthDate string `json:"birth_date" validate:"required"`
 	Address   string `json:"address" validate:"max=200"`
-	Gender    string `json:"gender"`
+	Gender    string `json:"gender" validate:"oneof=Male Female"`
 	ID        int    `json:"id"`
 }
 

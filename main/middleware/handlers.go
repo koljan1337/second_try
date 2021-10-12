@@ -26,8 +26,6 @@ func connect() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	//defer db.Close()
-
 	err = db.Ping()
 	if err != nil {
 		panic(err)
@@ -44,8 +42,6 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 
 	var person models.Person
 
-	//var loh []validator.FieldError
-
 	err := json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
 		log.Fatalf("Unable to decode request body. %v", err)
@@ -57,13 +53,10 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	var res response
 	if validationErr != nil {
 		res.Message = validationErr.Error()
-
 	}
-
 	if res.Message == "" {
 		insertID := insertPerson(person)
 		person.ID = insertID
-
 		res = response{
 			Person: &person,
 		}
@@ -83,7 +76,7 @@ func GetPerson(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Unable to convert the string into int. %v", err)
 	}
 
-	person, err := getPerson(int(id))
+	person, err := getPerson(id)
 	if err != nil {
 		log.Fatalf("Unable to get person. %v", err)
 	}
@@ -119,17 +112,23 @@ func UpdatePerson(w http.ResponseWriter, r *http.Request) {
 	var person models.Person
 	err = json.NewDecoder(r.Body).Decode(&person)
 
-	if err != nil {
-		log.Fatalf("Unable to decode request body. %v", err)
+	v := validator.New()
+	validationErr := v.Struct(person)
+
+	var res response
+	if validationErr != nil {
+		res.Message = validationErr.Error()
+	}
+	if res.Message == "" {
+		updatedRows := updatePerson(id, person)
+		msg := fmt.Sprintf("Person updates successfully. Total affected fields : %v", updatedRows)
+		person.ID = id
+		res.Person = &person
+		res.Msg = msg
 	}
 
-	updatedRows := updatePerson(int(id), person)
-	msg := fmt.Sprintf("Person updates successfully. Total affected fields : %v", updatedRows)
-	person.ID = id
-	res := response{
-		Message: "",
-		Person:  &person,
-		Msg:     msg,
+	if err != nil {
+		log.Fatalf("Unable to decode request body. %v", err)
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -152,7 +151,6 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	res := response{
 		Message: "",
 		Msg:     msg,
-		//Person: ,
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -164,10 +162,6 @@ func insertPerson(person models.Person) int {
 
 	defer db.Close()
 
-	//if person.Gender != "Male" || person.Gender != "Female" {
-	//	log.Fatal("Gender out of range.")
-	//	db.Close()
-	//}
 	var id int
 
 	sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
@@ -178,16 +172,6 @@ func insertPerson(person models.Person) int {
 	fmt.Printf("Inserted a single record %v", id)
 
 	return id
-	//sqlStatement := `INSERT INTO person (first_name, last_name, email, birth_date, address, gender) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-
-	//var id int
-
-	//err := person.bebra
-	//if err != nil {
-	//	return 0, err
-	//}
-
-	//err = db.QueryRow(sqlStatement, person.FirstName, person.LastName, person.Email, person.BirthDate, person.Address, person.Gender).Scan(&id)
 }
 
 //Get person by ID
@@ -248,11 +232,6 @@ func updatePerson(id int, person models.Person) int {
 	db := connect()
 
 	defer db.Close()
-
-	//if person.Gender != "Male" || person.Gender != "Female" {
-	//	log.Fatal("Gender is out of range.")
-	//	db.Close()
-	//}
 
 	sqlStatement := `UPDATE person SET first_name=$1, last_name=$2, email=$3, birth_date=$4, address=$5, gender=$6 WHERE id=$7`
 
